@@ -12,8 +12,7 @@ create table t_country (
 -- alter table t_country set owner to postgres;
 	
 create table t_company (
-	pk_companyID serial primary key,
-	companyName varchar(50) not null);
+	pk_companyName varchar(50) not NULL UNIQUE PRIMARY key);
 
 create table t_console(
 	pk_consoleID serial primary key,
@@ -30,8 +29,7 @@ create table t_review (
 	reviewScore real check (reviewScore > 0) check (reviewScore < 10.1));	
 
 create table t_user(
-	pk_userID serial primary key,
-	username varchar(45) not null,
+	pk_username varchar(45) not null unique primary key,
 	emailAddress varchar(255) not null,
 	displayName varchar(45) not null,
 	firstName varchar(45),
@@ -45,20 +43,23 @@ create table t_user(
 
 alter table t_review
 	-- could in the future change this to a 'person'? this could allow for external reviews. Right now we're saying that every review comes from a user of the system.
-	add column user_reviewerID integer references t_user(pk_userID) not null;
+	add column user_reviewer varchar references t_user(pk_username) not null;
 
 alter table t_user	
 	add column country_registeredCountry varchar(2) references t_country(countryCode);
 
 alter table t_game
 	add column console_consoleID integer references t_console(pk_consoleID) not null,
-	add column company_publisherID integer references t_company(pk_companyID) not null,
-	add column company_developerID integer references t_company(pk_companyID) not null;
+	add column company_publisherID varchar references t_company(pk_companyName) not null,
+	add column company_developerID varchar references t_company(pk_companyName) not null;
 
 alter table t_company
 	add column country_countryID varchar(2) references t_country(countryCode) not null;
+	
+insert into t_user(pk_username, emailaddress, displayname, firstname, lastname, country_registeredcountry) values
+	('cerwym', 'cerwym@googlemail.com', 'Cerwym', 'Peter', 'Lockett', 'gb');
 
-INSERT INTO t_country values
+insert into t_country values
 	('ad','Andorra'),
 	('af','Afghanistan'),
 	('ag','Antigua and Barbuda'),
