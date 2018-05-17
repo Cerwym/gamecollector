@@ -6,38 +6,49 @@ create schema gamecollector;
 -- set search_path to gamecollector;
 
 create table t_country (
-	countryCode	varchar(2) primary key not null,
-	countryName	varchar(80) not null);
+	country_code	varchar(2) primary key not null,
+	country_name	varchar(80) not null);
 	
 -- alter table t_country set owner to postgres;
 	
 create table t_company (
-	pk_companyName varchar(50) not NULL UNIQUE PRIMARY key);
+	pk_company_name varchar(50) not NULL UNIQUE PRIMARY key);
 
 create table t_console(
-	pk_consoleID serial primary key,
-	releaseDate date not null);
+	pk_console_id varchar(5) not null unique primary key,
+	name varchar(255) not null,
+	release_date date not null);
 
 create table t_game (
-	pk_gameID	serial primary key,
-	name	varchar(255) not null);		
+	identity_game_id serial unique,
+	name	varchar(255) not null,
+	release_date date );		
 	
 create table t_review (
-	pk_reviewID serial primary key,
-	reviewTitle varchar(100) not null,
-	reviewBody text not null,
-	reviewScore real check (reviewScore > 0) check (reviewScore < 10.1));	
+	pk_review_id serial primary key,
+	review_title varchar(100) not null,
+	review_body text not null,
+	review_score real check (review_score > 0) check (review_score < 10.1));	
 
 create table t_user(
 	pk_username varchar(45) not null unique primary key,
-	emailAddress varchar(255) not null,
-	displayName varchar(45) not null,
-	firstName varchar(45),
-	lastName varchar(45),
+	email_address varchar(255) not null,
+	display_name varchar(45) not null,
+	first_name varchar(45),
+	last_name varchar(45),
 	-- I wouldn't expect the service to pass this, so default it.
-	creationDate timestamp with time zone default now(),
-	activeYN varchar(1) default 'N',
-	lastLogin timestamp with time zone);	
+	creation_date timestamp with time zone default now(),
+	active_yn varchar(1) default 'N',
+	last_login timestamp with time zone);	
+	
+-- Create rel table between game and developers
+
+create table game_developer(
+	game_id integer,
+	developer_name varchar(255),
+	constraint pk_game_developer primary key(game_id, developer_name),
+	constraint fk_t_game_id foreign key(game_id) references t_game(identity_game_id) on delete cascade,
+	constraint fk_t_company_name foreign key(developer_name) references t_company(pk_company_name) on delete cascade);
 
 -- Establish relationships between tables. Doing this hear to avoid headaches with tables not exiting prior to creation.
 
@@ -46,19 +57,18 @@ alter table t_review
 	add column user_reviewer varchar references t_user(pk_username) not null;
 
 alter table t_user	
-	add column country_registeredCountry varchar(2) references t_country(countryCode);
+	add column country_registered_country varchar(2) references t_country(country_code);
 
 alter table t_game
-	add column console_consoleID integer references t_console(pk_consoleID) not null,
-	add column company_publisherID varchar references t_company(pk_companyName) not null,
-	add column company_developerID varchar references t_company(pk_companyName) not null;
+	add column console_console_id varchar references t_console(pk_console_id) not null,
+	add constraint pk_game_id primary key(name, console_console_id);
 
 alter table t_company
-	add column country_countryID varchar(2) references t_country(countryCode) not null;
+	add column country_country_id varchar references t_country(country_code) not null;
 	
-insert into t_user(pk_username, emailaddress, displayname, firstname, lastname, country_registeredcountry) values
-	('cerwym', 'cerwym@googlemail.com', 'Cerwym', 'Peter', 'Lockett', 'gb');
-
+alter table t_console
+	add column company_manufacturer varchar references t_company(pk_company_name) not null;
+	
 insert into t_country values
 	('ad','Andorra'),
 	('af','Afghanistan'),
@@ -308,3 +318,47 @@ insert into t_country values
 	('ye','Yemen'),
 	('zm','Zambia'),
 	('zw','Zimbabwe');
+	
+insert into t_company(pk_company_name, country_country_id) values
+	('Nintendo', 'jp'),
+	('Sega', 'jp'),
+	('Microsoft','us'),
+	('Sony', 'jp');
+
+insert into t_user(pk_username, email_address, display_name, first_name, last_name, country_registered_country) values
+	('cerwym', 'cerwym@googlemail.com', 'Cerwym', 'Peter', 'Lockett', 'gb');
+	
+insert into t_console(pk_console_id, name, release_date, company_manufacturer) values
+	('NES', 'Nintendo Entertainment System', '1983-07-15', 'Nintendo'),
+	('SNES', 'Super Nintendo Entertainment System', '1990-11-25', 'Nintendo'),
+	('N64', 'Nintendo 64', '1996-06-23', 'Nintendo'),
+	('GCN', 'Gamecube', '2001-09-14', 'Nintendo'),
+	('SMS', 'Master System', '1985-10-20', 'Sega'),
+	('MGD', 'Mega Drive', '1988-10-29', 'Sega'),
+	('STRN', 'Sega Saturn', '1994-11-22', 'Sega'),
+	('DC', 'Dreamcast', '1998-11-27', 'Sega'),
+	('XBX', 'Xbox', '2001-11-15', 'Microsoft'),
+	('PS1', 'Playstation 1', '1994-12-03', 'Sony'),
+	('PS2', 'Playstation 2', '2000-03-04', 'Sony'),
+	('GBA', 'Gameboy Advance', '2001-03-21', 'Nintendo');
+	
+insert into t_game(name, console_console_id) values
+	('Super Mario Brothers 3', 'NES'),
+	('Metroid', 'NES'),
+	('The Legend of Zelda', 'NES'),
+	('The Legend of Zelda : A Link to the Past', 'SNES'),
+	('The Legend of Zelda : A Link to the Past', 'GBA'),
+	('Earthbound', 'SNES'),
+	('Super Mario World', 'SNES'),
+	('Super Mario 64', 'N64'),
+	('Super Smash Brothers', 'N64'),
+	('Conker''s Bad Fur Day', 'N64'),
+	('Super Mario Sunshine', 'GCN'),
+	('Eternal Darkness', 'GCN'),
+	('Metal Gear Solid', 'PS1'),
+	('Streets of Rage 3', 'MGD'),
+	('Sonic Labyrinth', 'SMS'),
+	('Exhumed', 'STRN'),
+	('Sonic Adventure', 'DC'),
+	('Shadow of the Collosus', 'PS2')
+	
